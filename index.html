@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ketki's Portfolio & Services</title>
+
+    <!-- Chosen Palette: Earthy Professional -->
+    <!-- Application Structure Plan: The SPA is designed as a vertical scroll with a sticky left-hand navigation to allow users to jump between key sections: Home (introduction), Learning Journey (timeline of education), Portfolio (project case studies), Services (entrepreneurial offerings), and About/Contact (personal narrative and contact details). This structure is chosen to present a clear, linear progression of information while enabling quick access to any part of the site, reflecting an intuitive information architecture. Key interactions include navigation clicks, potential project detail expansion, and subtle visual indicators. -->
+    <!-- Visualization & Content Choices: 
+        - Homepage Hero (Inform): Direct, impactful text with prominent roles and cross-domain focus.
+        - Learning Journey (Change/Organize): A CSS-based horizontal timeline for key educational milestones (B.Arch, MOOCs start, Masters prospect). Detailed course lists are presented within collapsible sections, categorized by subject, to avoid overwhelming the user while allowing deep dives.
+        - Portfolio (Organize/Inform): A responsive grid of project cards. Each card presents a project title, a brief summary, and a button to "Explore Project," hinting at more details (though in this single-page context, it's illustrative for a full site). This visually organizes diverse projects. Added a "✨ Suggest Project Idea" button that uses Gemini API to generate new project ideas, displayed dynamically.
+        - Services (Inform/Organize): A simple bulleted list of offerings and suggested additional services, making it easy for potential clients to understand what Ketki offers. Added a "✨ Discover More Services" button that uses Gemini API to generate niche service ideas, displayed dynamically.
+        - About Me & Contact (Inform): A drafted narrative about the "why" behind the career pivot, providing personal context, alongside clear contact methods.
+        - Justification: This blend of static text, structured lists, and interactive navigation elements ensures clarity, allows the user to control their information consumption, and creates an engaging narrative of Ketki's professional identity without relying on complex JS libraries or off-page navigations. The Gemini API integrations enhance engagement by providing dynamic content generation directly relevant to Ketki's profile. NO SVG, NO Mermaid JS are used. -->
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4; /* Light Cream */
+            color: #403d39; /* Dark Brown/Charcoal */
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link.active {
+            background-color: #A39B8B; /* Muted Green-Brown */
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        .nav-link:not(.active):hover {
+            background-color: #E7E3DA; /* Light Taupe */
+        }
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .accordion-header:hover {
+            background-color: #F0EDE8;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 100%;
+            background-color: #A39B8B;
+        }
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #A39B8B;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #F8F7F4;
+            box-shadow: 0 0 0 2px #A39B8B;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8F7F4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CCC5B9; /* Light Grey-Brown */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #A39B8B; /* Muted Green-Brown */
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #A39B8B;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <div class="flex flex-col lg:flex-row min-h-screen">
+        <aside class="w-full lg:w-64 bg-[#E7E3DA] p-4 lg:p-6 lg:fixed lg:h-full shadow-lg lg:shadow-none">
+            <h1 class="text-3xl font-bold text-[#403d39] mb-1">Ketki</h1>
+            <p class="text-sm text-[#74716C] mb-8">Architect & Cross-Domain Designer</p>
+            <nav id="main-nav">
+                <ul class="space-y-2">
+                    <li><a href="#home" class="nav-link flex items-center p-3 rounded-lg"><span class="mr-3 text-lg">🏠</span> Home</a></li>
+                    <li><a href="#learning" class="nav-link flex items-center p-3 rounded-lg"><span class="mr-3 text-lg">📚</span> Learning Journey</a></li>
+                    <li><a href="#portfolio" class="nav-link flex items-center p-3 rounded-lg"><span class="mr-3 text-lg">✨</span> Portfolio</a></li>
+                    <li><a href="#services" class="nav-link flex items-center p-3 rounded-lg"><span class="mr-3 text-lg">💼</span> Services</a></li>
+                    <li><a href="#about-contact" class="nav-link flex items-center p-3 rounded-lg"><span class="mr-3 text-lg">💬</span> About & Contact</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8">
+            
+            <section id="home" class="min-h-[calc(100vh-100px)] flex items-center justify-center text-center">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-5xl md:text-7xl font-bold mb-6 leading-tight text-[#403d39]">
+                        Architect. <span class="text-[#A39B8B]">UI/UX Designer.</span>
+                        <br class="hidden md:block"> Industrial Product Designer.
+                    </h2>
+                    <p class="text-xl md:text-2xl text-[#74716C] mb-8">
+                        Crafting Human-Centric Experiences at the Intersection of <span class="font-semibold">Sustainability</span> and <span class="font-semibold">Healthcare</span>.
+                    </p>
+                    <a href="#portfolio" class="inline-block bg-[#A39B8B] text-white font-medium py-3 px-8 rounded-full shadow-lg hover:bg-[#8B7B6A] transition duration-300">Explore My Work</a>
+                </div>
+            </section>
+
+            <section id="learning" class="py-12 md:py-16">
+                <h2 class="text-3xl font-bold mb-4 text-[#403d39]">My Learning Journey</h2>
+                <p class="text-[#74716C] mb-10">This section outlines my academic foundation and the continuous learning path I'm pursuing to blend architecture with cutting-edge design and industry knowledge.</p>
+                
+                <div class="relative max-w-4xl mx-auto">
+                    <div class="hidden md:block absolute left-1/2 -ml-0.5 w-0.5 bg-[#A39B8B] h-full transform -translate-x-1/2"></div>
+                    
+                    <div class="md:grid md:grid-cols-2 md:gap-x-12 relative">
+                        <!-- Timeline Item: B.Arch -->
+                        <div class="timeline-item relative mb-8 md:mb-16 pb-8 md:pb-0 md:pr-8 text-center md:text-right">
+                            <div class="timeline-dot hidden md:block"></div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 class="font-semibold text-xl mb-2 text-[#403d39]">B.Arch, Mumbai University</h3>
+                                <p class="text-sm text-[#74716C]">2020 - 2025</p>
+                                <p class="mt-3 text-sm">Foundational understanding of architectural design, urban planning, and building sciences.</p>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Item: Transition & MOOCs -->
+                        <div class="md:col-start-2 timeline-item relative mb-8 md:mb-16 pt-8 md:pt-0 md:pl-8 text-center md:text-left">
+                            <div class="timeline-dot hidden md:block"></div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 class="font-semibold text-xl mb-2 text-[#403d39]">Cross-Domain Skill Development (Ongoing)</h3>
+                                <p class="text-sm text-[#74716C]">Mid-2025 Onwards</p>
+                                <p class="mt-3 text-sm">Aggressively building capabilities in UI/UX, sustainability, project management, and healthcare design.</p>
+                                <div class="mt-4 space-y-3 accordion">
+                                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <button class="accordion-header w-full flex justify-between items-center p-3 font-medium text-sm text-left text-[#403d39]">
+                                            <span>UI/UX & Product Design Courses</span>
+                                            <span class="accordion-icon text-lg font-light transform transition-transform duration-500">+</span>
+                                        </button>
+                                        <div class="accordion-content">
+                                            <ul class="p-3 pt-0 text-xs text-[#74716C] list-disc list-inside">
+                                                <li>Google UI/UX Design Course (Coursera)</li>
+                                                <li>Product Design & Health Professional Certificate (edX)</li>
+                                                <li>Design Thinking for Innovation (Coursera)</li>
+                                                <li>UX Research and Design Specialization (Coursera)</li>
+                                                <li>IDEO U Courses (e.g., "Human-Centered Design for Innovation")</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <button class="accordion-header w-full flex justify-between items-center p-3 font-medium text-sm text-left text-[#403d39]">
+                                            <span>Sustainability & Circularity</span>
+                                            <span class="accordion-icon text-lg font-light transform transition-transform duration-500">+</span>
+                                        </button>
+                                        <div class="accordion-content">
+                                            <ul class="p-3 pt-0 text-xs text-[#74716C] list-disc list-inside">
+                                                <li>Circular Strategies for Sustainable Healthcare Prof. Cert. (edX)</li>
+                                                <li>Sustainable Building Design (edX, MIT)</li>
+                                                <li>Zero-Energy Design (edX, TU Delft)</li>
+                                                <li>Resource and Waste Management in Buildings (Coursera)</li>
+                                                <li>Specific Software/Tool Courses (BIM for sustainability)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <button class="accordion-header w-full flex justify-between items-center p-3 font-medium text-sm text-left text-[#403d39]">
+                                            <span>Healthcare Facility Design & Management</span>
+                                            <span class="accordion-icon text-lg font-light transform transition-transform duration-500">+</span>
+                                        </button>
+                                        <div class="accordion-content">
+                                            <ul class="p-3 pt-0 text-xs text-[#74716C] list-disc list-inside">
+                                                <li>Healthcare Design (U Tas, U Mich, Symbiosis)</li>
+                                                <li>Healthcare Organization and Operations Specialization (Coursera)</li>
+                                                <li>Local Indian Courses/Webinars (Hospital ops, med-tech integration)</li>
+                                                <li>"Digital Health" or "Health Informatics" MOOCs</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                     <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <button class="accordion-header w-full flex justify-between items-center p-3 font-medium text-sm text-left text-[#403d39]">
+                                            <span>Project Management</span>
+                                            <span class="accordion-icon text-lg font-light transform transition-transform duration-500">+</span>
+                                        </button>
+                                        <div class="accordion-content">
+                                            <ul class="p-3 pt-0 text-xs text-[#74716C] list-disc list-inside">
+                                                <li>Google Project Management Prof. Cert. (Coursera)</li>
+                                                <li>Construction Project Management (Coursera)</li>
+                                                <li>Agile Project Management (Coursera)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Item: Future - Masters -->
+                        <div class="timeline-item relative mb-8 md:mb-0 pb-8 md:pb-0 md:pr-8 text-center md:text-right">
+                            <div class="timeline-dot hidden md:block"></div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 class="font-semibold text-xl mb-2 text-[#403d39]">Prospective Masters Program</h3>
+                                <p class="text-sm text-[#74716C]">Future</p>
+                                <p class="mt-3 text-sm">Building on current expertise for advanced specialization and research.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="portfolio" class="py-12 md:py-16">
+                <h2 class="text-3xl font-bold mb-4 text-[#403d39]">Portfolio: Integrated Design Projects</h2>
+                <p class="text-[#74716C] mb-10">A showcase of my projects, blending architectural foundations with UI/UX, sustainability, healthcare design, and industrial product development. These demonstrate my ability to approach complex problems with a holistic, human-centered perspective.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Project 1: Mumbai Hospital Design Thesis -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Mumbai Hospital Design Thesis: Integrating Patient Experience</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">A B.Arch thesis project focusing on architectural design optimized for patient flow, well-being, and intuitive navigation within a large urban hospital context.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Project 2: Clinic Flow Optimization (Intern) -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Clinic Flow Optimization: Intern Project A</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Analysis and redesign of patient and staff pathways in a specialized clinic to reduce wait times and improve operational efficiency during an internship.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Project 3: Reimagining Patient Waiting Areas (Intern) -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Reimagining Patient Waiting Areas: Intern Project B</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">A design proposal for creating more comfortable, less stressful, and engaging waiting environments in a healthcare facility.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Prospective Project 1: Insurance App UI/UX -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Seamless Insurance App: UI/UX for Policyholders</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Prospective project: Designing an intuitive mobile application for insurance policy management, focusing on user-friendly navigation and clear information architecture.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Prospective Project 2: Diabetic Management UI/UX -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Diabetic Management Companion: UI/UX Health App</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Prospective project: UI/UX design for a digital health application aiding diabetic patients in tracking, managing, and understanding their condition more effectively.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Prospective Project 3: Prick-Free Device Product Design -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Painless Glucose Monitoring: Industrial Product Design</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Prospective project: Concept design for a user-friendly, non-invasive device for blood sugar testing, emphasizing ergonomics and aesthetics.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Prospective Project 4: Sustainable Primary Healthcare Centers -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Network of Sustainable Primary Healthcare Centers</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Prospective project: Architectural and systems design for a network of eco-friendly primary healthcare facilities, integrating local materials and energy efficiency.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Suggested Prospective Project 1: Smart Home Ecosystem for Elder Care -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Smart Home Ecosystem for Elder Care: UI/UX & Spatial</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Suggested: Designing an integrated smart home system and spatial layout for elderly residents, focusing on intuitive controls and a seamless living experience.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Suggested Prospective Project 2: Modular Refugee Shelter -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Modular, Rapid-Deployment Refugee Shelter with Circular Materials Focus</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Suggested: Product and architectural design for emergency shelters using circular economy principles for rapid assembly and demountability.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+
+                    <!-- Suggested Prospective Project 3: Community Health Data Viz -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col opacity-90">
+                        <h3 class="font-semibold text-lg mb-2 text-[#403d39]">Community Health Data Visualization Dashboard for Urban Planners</h3>
+                        <p class="text-sm text-[#74716C] mb-4 flex-grow">Suggested: Developing a UI/UX concept for a dashboard to help urban planners visualize and analyze public health data to inform city design decisions.</p>
+                        <button class="bg-[#CCC5B9] text-[#403d39] font-medium py-2 px-4 rounded-md hover:bg-[#BFB8A8] transition duration-300">Explore Project</button>
+                    </div>
+                </div>
+
+                <div class="mt-10 text-center">
+                    <button id="suggest-project-btn" class="bg-[#A39B8B] text-white font-medium py-3 px-8 rounded-full shadow-lg hover:bg-[#8B7B6A] transition duration-300">
+                        ✨ Suggest New Project Idea
+                    </button>
+                    <div id="suggested-project-output" class="mt-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hidden">
+                        <p class="text-sm text-[#74716C]"></p>
+                    </div>
+                     <div id="project-loading-indicator" class="hidden mt-4 flex items-center justify-center">
+                        <div class="loading-spinner mr-2"></div>
+                        <span class="text-sm text-[#74716C]">Generating idea...</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="services" class="py-12 md:py-16">
+                <h2 class="text-3xl font-bold mb-4 text-[#403d39]">Services & Offerings</h2>
+                <p class="text-[#74716C] mb-10">Drawing on my unique blend of skills, I offer a range of design and consulting services, with an entrepreneurial approach to solving complex challenges in the built environment and digital spaces.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="font-semibold text-xl mb-3 text-[#403d39]">Core Design Services</h3>
+                        <ul class="space-y-2 text-sm text-[#74716C] list-disc list-inside">
+                            <li>UI/UX Design (Web, Mobile, Digital Products)</li>
+                            <li>Architecture Blueprint Drafting & Visualization</li>
+                            <li>Industrial Product Design (Concept to Prototyping)</li>
+                            <li>Design Consulting & Strategy</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="font-semibold text-xl mb-3 text-[#403d39]">Specialized Offerings (Inspired by Industry Trends)</h3>
+                        <ul id="specialized-offerings-list" class="space-y-2 text-sm text-[#74716C] list-disc list-inside">
+                            <li>User Research & Persona Development for Spatial/Digital Experiences</li>
+                            <li>Sustainable Building Material Sourcing & Consulting</li>
+                            <li>Healthcare Workflow Analysis & Patient Journey Mapping</li>
+                            <li>Accessibility & Inclusive Design Audits for Built Environments and Digital Interfaces</li>
+                            <li>LEED/GRIHA Certification Consulting for Architectural Projects</li>
+                            <li>Digital Twin & Smart Building Integration Consulting</li>
+                            <li>Design Sprint Facilitation for Cross-Disciplinary Teams</li>
+                            <li>Brand Identity & Visual Systems for Design-Centric Startups</li>
+                        </ul>
+                    </div>
+                </div>
+
+                 <div class="mt-10 text-center">
+                    <button id="suggest-services-btn" class="bg-[#A39B8B] text-white font-medium py-3 px-8 rounded-full shadow-lg hover:bg-[#8B7B6A] transition duration-300">
+                        ✨ Discover More Niche Services
+                    </button>
+                    <div id="suggested-services-output" class="mt-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hidden">
+                        <h4 class="font-semibold mb-2 text-[#403d39]">Suggested Niche Services:</h4>
+                        <ul class="space-y-2 text-sm text-[#74716C] list-disc list-inside"></ul>
+                    </div>
+                     <div id="services-loading-indicator" class="hidden mt-4 flex items-center justify-center">
+                        <div class="loading-spinner mr-2"></div>
+                        <span class="text-sm text-[#74716C]">Generating services...</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about-contact" class="py-12 md:py-16">
+                <h2 class="text-3xl font-bold mb-4 text-[#403d39]">About Me & Contact</h2>
+                <p class="text-[#74716C] mb-10">My journey from the foundational principles of architecture to the intricate world of user experience and product design is driven by a singular purpose: to create environments and tools that genuinely serve human needs, respect our planet, and empower progress.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="font-semibold text-xl mb-3 text-[#403d39]">My Story & Vision</h3>
+                        <p class="text-sm text-[#74716C] mb-4">
+                            As a recent B.Arch graduate from Mumbai University, I've always been fascinated by how spaces shape lives. However, I quickly realized that a building's true impact extends beyond its physical form. It encompasses every interaction, every emotional response, and its ecological footprint. This realization fueled my pivot into UI/UX and industrial product design – disciplines that place human experience at their core.
+                        </p>
+                        <p class="text-sm text-[#74716C]">
+                            My passion now lies in the cross-domain of sustainability and healthcare. I believe that by integrating human-centric design principles, robust project management, and a deep understanding of sustainable practices, we can create built environments and digital solutions that are not just functional, but genuinely transformative. With an entrepreneurial spirit, I'm eager to solve complex challenges, build impactful solutions, and contribute to a healthier, more sustainable future, whether through innovative ventures or impactful roles in forward-thinking organizations.
+                        </p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="font-semibold text-xl mb-3 text-[#403d39]">Get in Touch</h3>
+                        <ul class="space-y-3 text-sm text-[#74716C]">
+                            <li class="flex items-center">📧 <span class="ml-2">ketki.design@email.com</span></li>
+                            <li class="flex items-center">🔗 <a href="https://linkedin.com/in/ketki-design" target="_blank" class="ml-2 text-[#A39B8B] hover:underline">linkedin.com/in/ketki-design</a></li>
+                            <li class="flex items-center">🎨 <a href="https://behance.net/ketkidesign" target="_blank" class="ml-2 text-[#A39B8B] hover:underline">behance.net/ketkidesign</a></li>
+                            <li class="flex items-center"> freelancing <a href="https://upwork.com/freelancers/~0123456789" target="_blank" class="ml-2 text-[#A39B8B] hover:underline">upwork.com/freelancers/~ketki</a></li>
+                        </ul>
+                        <p class="mt-6 text-xs text-[#74716C]">Looking forward to connecting and exploring collaborative opportunities!</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const mainNav = document.getElementById('main-nav');
+            const navLinks = mainNav.querySelectorAll('a');
+            const sections = document.querySelectorAll('main section');
+
+            function updateActiveLink() {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    // Adjust offset for sticky header/padding if necessary
+                    if (pageYOffset >= sectionTop - 150) { 
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // Initial call and attach event listener
+            window.addEventListener('scroll', updateActiveLink);
+            updateActiveLink(); // Set active link on load
+
+            // Smooth scroll for nav links (already handled by scroll-smooth class, but added for robustness)
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    // Manually update active state immediately after click for better UX
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+
+            const accordions = document.querySelectorAll('.accordion');
+            accordions.forEach(accordion => {
+                 accordion.addEventListener('click', (e) => {
+                    const header = e.target.closest('.accordion-header');
+                    if (!header) return;
+
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.accordion-icon');
+                    
+                    if(content.style.maxHeight && content.style.maxHeight !== "0px") { // Check if it has a height set
+                        content.style.maxHeight = null;
+                        icon.classList.remove('rotate-45'); // Rotate back
+                    } else {
+                        // Reset all others before opening new one for exclusive accordion behavior
+                        accordions.forEach(otherAccordion => {
+                            const otherContent = otherAccordion.querySelector('.accordion-content');
+                            const otherIcon = otherAccordion.querySelector('.accordion-icon');
+                            if (otherContent && otherContent !== content && otherContent.style.maxHeight && otherContent.style.maxHeight !== "0px") {
+                                otherContent.style.maxHeight = null;
+                                otherIcon.classList.remove('rotate-45');
+                            }
+                        });
+
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.classList.add('rotate-45'); // Rotate
+                    }
+                 });
+            });
+
+            // Gemini API Integration
+            const apiKey = ""; // Canvas will automatically provide the API key at runtime
+
+            async function callGeminiAPI(prompt) {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        console.error('Gemini API response structure unexpected:', result);
+                        return 'Could not generate content.';
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    return 'Failed to generate content. Please try again later.';
+                }
+            }
+
+            // Project Idea Generator
+            const suggestProjectBtn = document.getElementById('suggest-project-btn');
+            const suggestedProjectOutput = document.getElementById('suggested-project-output');
+            const projectLoadingIndicator = document.getElementById('project-loading-indicator');
+
+            if (suggestProjectBtn) {
+                suggestProjectBtn.addEventListener('click', async () => {
+                    suggestedProjectOutput.classList.add('hidden');
+                    projectLoadingIndicator.classList.remove('hidden');
+
+                    const prompt = `Based on the following areas of expertise: Architecture, UI/UX Design, Industrial Product Design, Sustainability in Built Environment, Healthcare Facility Design and Management, Entrepreneurship. Generate one unique and specific project idea that combines at least three of these domains. The idea should be innovative and suitable for a portfolio. Provide only the project idea, no additional text.`;
+                    const idea = await callGeminiAPI(prompt);
+                    
+                    projectLoadingIndicator.classList.add('hidden');
+                    suggestedProjectOutput.querySelector('p').textContent = idea;
+                    suggestedProjectOutput.classList.remove('hidden');
+                });
+            }
+
+            // Niche Service Suggester
+            const suggestServicesBtn = document.getElementById('suggest-services-btn');
+            const suggestedServicesOutput = document.getElementById('suggested-services-output');
+            const suggestedServicesList = suggestedServicesOutput.querySelector('ul');
+            const servicesLoadingIndicator = document.getElementById('services-loading-indicator');
+
+            if (suggestServicesBtn) {
+                suggestServicesBtn.addEventListener('click', async () => {
+                    suggestedServicesOutput.classList.add('hidden');
+                    servicesLoadingIndicator.classList.remove('hidden');
+
+                    const currentServices = Array.from(document.querySelectorAll('#specialized-offerings-list li')).map(li => li.textContent).join(', ');
+                    const prompt = `Given the following core services and specialized offerings of a designer working at the intersection of architecture, UI/UX, industrial product design, sustainability, and healthcare: ${currentServices}. Suggest 2-3 additional, even more niche or specific service offerings that would be valuable for potential clients. Provide only the list of services, each as a concise phrase on a new line. Do not include any introductory or concluding text.`;
+                    const servicesText = await callGeminiAPI(prompt);
+                    
+                    servicesLoadingIndicator.classList.add('hidden');
+                    suggestedServicesList.innerHTML = ''; // Clear previous suggestions
+                    const newServices = servicesText.split('\n').filter(s => s.trim() !== '');
+                    newServices.forEach(service => {
+                        const li = document.createElement('li');
+                        li.textContent = service.trim();
+                        suggestedServicesList.appendChild(li);
+                    });
+                    suggestedServicesOutput.classList.remove('hidden');
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
